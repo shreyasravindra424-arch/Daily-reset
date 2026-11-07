@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#10151d">
+<meta name="description" content="Your personal daily habit tracker for school, fitness, study and self-care.">
+<meta name="application-name" content="Daily Reset">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon-192.png">
+<link rel="apple-touch-icon" href="icons/icon-192.png">
+<title>Daily Reset</title>
+<style>
+:root{--bg:#10151d;--panel:#19222d;--panel2:#202c39;--text:#f3f5f7;--muted:#9ba8b6;--mint:#a8e6cf;--lav:#c7b8ff;--line:#2b3948}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at 90% 0%,#293347 0,transparent 34%),var(--bg);color:var(--text);font:15px/1.45 system-ui,-apple-system,Segoe UI,sans-serif;min-height:100vh}
+main{max-width:560px;margin:auto;padding:26px 18px 42px}.top{display:flex;justify-content:space-between;align-items:center;margin-bottom:24px}.eyebrow{color:var(--mint);font-size:11px;letter-spacing:2px;font-weight:800}.date{color:var(--muted);font-size:12px}
+h1{font-size:32px;line-height:1.08;margin:7px 0 8px;letter-spacing:-1px}.sub{color:var(--muted);margin:0 0 20px}
+.hero{background:linear-gradient(135deg,#243b43,#252b42);border:1px solid #40515d;border-radius:24px;padding:19px;margin-bottom:18px;display:grid;grid-template-columns:1fr 100px;gap:12px;align-items:center}
+.hero small{color:#c3d4d4}.big{font-size:34px;font-weight:800;letter-spacing:-1px}.track{height:8px;background:#3b4b55;border-radius:9px;overflow:hidden;margin-top:12px}.fill{height:100%;width:0;background:var(--mint);border-radius:9px;transition:width .2s}
+.ring{width:88px;height:88px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--mint) var(--p,0%),#40505d 0);position:relative}.ring:before{content:"";position:absolute;inset:7px;border-radius:50%;background:#263941}.ring b{position:relative;font-size:18px}
+.toolbar{display:flex;gap:9px;margin:0 0 18px}.toolbar input{flex:1;min-width:0;background:var(--panel);border:1px solid var(--line);color:var(--text);padding:11px 12px;border-radius:13px;font:inherit}
+.section{background:var(--panel);border:1px solid var(--line);border-radius:19px;padding:15px;margin:13px 0}.sectitle{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;font-weight:750}.count{font-size:11px;color:var(--muted);font-weight:600}
+.habit{display:flex;align-items:center;gap:12px;padding:11px 2px;border-top:1px solid #283441}.habit:first-of-type{border-top:0}.check{appearance:none;width:22px;height:22px;border:1.5px solid #647486;border-radius:8px;margin:0;flex:none;display:grid;place-items:center}.check:checked{background:var(--mint);border-color:var(--mint)}.check:checked:after{content:"✓";color:#13231f;font-weight:900}.habit label{flex:1}.habit.done label{color:#91a49e;text-decoration:line-through}.tag{font-size:10px;color:var(--muted);background:var(--panel2);padding:4px 7px;border-radius:8px}
+.note{width:100%;min-height:82px;resize:vertical;background:var(--panel);border:1px solid var(--line);border-radius:15px;color:var(--text);padding:13px;font:inherit}
+.actions{display:flex;gap:9px;margin-top:12px}.btn{border:1px solid var(--line);background:var(--panel2);color:var(--text);padding:11px 14px;border-radius:13px;font:600 13px inherit;cursor:pointer}.btn.primary{background:var(--mint);border-color:var(--mint);color:#14251f}.foot{text-align:center;color:var(--muted);font-size:11px;margin-top:22px}
+</style>
+</head>
+<body>
+<main>
+ <div class="top"><div class="eyebrow">YOUR PERSONAL SPACE</div><div class="date" id="prettyDate"></div></div>
+ <h1>Daily<br><span style="color:var(--mint)">Reset.</span></h1>
+ <p class="sub">Small promises. Kept daily.</p>
+ <section class="hero">
+  <div><small>TODAY'S PROGRESS</small><div class="big"><span id="done">0</span><span style="color:#c4d1d1;font-size:19px"> / <span id="total">0</span></span></div><div class="track"><div class="fill" id="fill"></div></div><small id="encourage">Start with one small win.</small></div>
+  <div class="ring" id="ring"><b id="percent">0%</b></div>
+ </section>
+ <div class="toolbar"><input type="date" id="day"><button class="btn" id="today">Today</button></div>
+ <div id="sections"></div>
+ <section class="section"><div class="sectitle">✍️ Daily reflection <span class="count">A NOTE TO YOURSELF</span></div><textarea class="note" id="journal" placeholder="One win today… one thing to improve tomorrow…"></textarea></section>
+ <div class="actions"><button class="btn primary" id="reset">Reset this day</button><button class="btn" id="export">Export progress</button></div>
+ <div class="foot">Made for your school days · Progress saves on this device</div>
+</main>
+<script>
+const groups=[
+ {title:"☀️ Morning",items:["Wake up on time","Brush + skincare","Breakfast","Get ready without rushing"]},
+ {title:"🎒 School",items:["Stay focused in class","Complete school tasks"]},
+ {title:"🏋️ Fitness & care",items:["Gym / planned recovery","Eat balanced meals","Drink water regularly"]},
+ {title:"📚 Study",items:["Study session 1 · 1 hour","Study session 2 · 1 hour","Revise today's lessons"]},
+ {title:"🌙 Night reset",items:["Limit unnecessary scrolling","Prepare school bag","Night skincare","Sleep on time"]}
+];
+const key=d=>"daily-reset-v1:"+d;
+const $=id=>document.getElementById(id);
+const today=new Date();const localDate=d=>{const x=new Date(d.getTime()-d.getTimezoneOffset()*60000);return x.toISOString().slice(0,10)};
+$("day").value=localDate(today);
+$("prettyDate").textContent=today.toLocaleDateString(undefined,{weekday:"short",month:"short",day:"numeric"});
+let state={checks:{},journal:""};
+function load(){try{state=JSON.parse(localStorage.getItem(key($("day").value)))||{checks:{},journal:""}}catch(e){state={checks:{},journal:""}}$("journal").value=state.journal||"";render()}
+function save(){state.journal=$("journal").value;localStorage.setItem(key($("day").value),JSON.stringify(state));updateProgress()}
+function render(){let out="";groups.forEach((g,gi)=>{out+=`<section class="section"><div class="sectitle">${g.title}<span class="count" id="group${gi}">0/${g.items.length}</span></div>`;g.items.forEach((item,i)=>{const id=gi+"-"+i,checked=!!state.checks[id];out+=`<div class="habit ${checked?"done":""}"><input class="check" type="checkbox" id="h${id}" data-id="${id}" ${checked?"checked":""}><label for="h${id}">${item}</label></div>`});out+="</section>"});$("sections").innerHTML=out;document.querySelectorAll(".check").forEach(el=>el.addEventListener("change",e=>{state.checks[e.target.dataset.id]=e.target.checked;e.target.closest(".habit").classList.toggle("done",e.target.checked);save();updateGroupCounts()}));updateGroupCounts();updateProgress()}
+function updateGroupCounts(){groups.forEach((g,gi)=>{let n=g.items.filter((_,i)=>state.checks[gi+"-"+i]).length;$("group"+gi).textContent=n+"/"+g.items.length})}
+function updateProgress(){let total=groups.reduce((n,g)=>n+g.items.length,0),done=Object.values(state.checks).filter(Boolean).length,p=Math.round(done/total*100);$("done").textContent=done;$("total").textContent=total;$("percent").textContent=p+"%";$("fill").style.width=p+"%";$("ring").style.setProperty("--p",p+"%");$("encourage").textContent=p===100?"You showed up for yourself. ✨":p>=60?"You're building momentum.":p>=25?"Nice work. Keep going.":"Start with one small win."}
+$("day").addEventListener("change",load);$("today").onclick=()=>{$("day").value=localDate(new Date());load()};$("journal").addEventListener("input",save);
+$("reset").onclick=()=>{if(confirm("Clear this day's checkmarks and note?")){state={checks:{},journal:""};localStorage.removeItem(key($("day").value));$("journal").value="";render()}};
+$("export").onclick=()=>{let text=`Daily Reset — ${$("day").value}\n`;groups.forEach((g,gi)=>{text+="\n"+g.title+"\n";g.items.forEach((item,i)=>text+=(state.checks[gi+"-"+i]?"[x] ":"[ ] ")+item+"\n")});text+="\nReflection: "+state.journal;navigator.clipboard?.writeText(text).then(()=>alert("Progress copied!")).catch(()=>alert(text))};
+load();
+if ('serviceWorker' in navigator) window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(()=>{}));
+</script>
+</body></html>
